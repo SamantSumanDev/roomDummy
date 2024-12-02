@@ -1,0 +1,17 @@
+package com.samant.rommdummy.model
+
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "deleted_notes")
+data class DeletedNote(
+    @ColumnInfo(name = "title") val noteTitle: String,
+    @ColumnInfo(name = "description") val noteDescription: String,
+    @ColumnInfo(name = "venue") val noteVenue: String,
+    @ColumnInfo(name = "mapLink") val noteMapLink: String,
+    @ColumnInfo(name = "timestamp") val timeStamp: String
+) {
+    @PrimaryKey(autoGenerate = true)
+    var id: Int = 0
+}

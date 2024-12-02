@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Note Grow</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="search_task_here">Search task here...</string>
+    <string name="no_task">No Task</string>
+    <string name="no_task_desc">Looks like you don’t have a task,\nplease add task</string>
+    <string name="home">Home</string>
+    <string name="history">History</string>
+    <string name="add_task">Add Task</string>
+    <string name="add_new_task">Add New Task</string>
+    <string name="event_name">Event name</string>
+    <string name="input_task_here">Input task title</string>
+    <string name="enter_desc">Enter description...</string>
+    <string name="data_time"><![CDATA[Date & Time]]></string>
+</resources>
