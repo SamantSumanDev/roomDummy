@@ -11,16 +11,17 @@ import com.samant.rommdummy.R
 import com.samant.rommdummy.databinding.ActivityMainBinding
 import com.samant.rommdummy.ui.fragments.Historyragment
 import com.samant.rommdummy.ui.fragments.HomeFragment
+import dagger.hilt.android.AndroidEntryPoint
 
-
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         supportActionBar?.hide()
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -28,58 +29,45 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        binding.bottomNav.lnrHome.setOnClickListener {
-            homeFragment()
-        }
-
-        binding.bottomNav.imgHome.setOnClickListener {
-            homeFragment()
-        }
-        binding.bottomNav.lnrHistory.setOnClickListener {
-            historyFragment()
-        }
-
-        binding.bottomNav.imgHistory.setOnClickListener {
-            historyFragment()
-        }
-
-        binding.bottomNav.view2.setOnClickListener{
-            val intent = Intent(this, AddNewTaskActivity::class.java)
-            startActivity(intent)
-        }
-        binding.bottomNav.imgAdd.setOnClickListener {
-            val intent = Intent(this, AddNewTaskActivity::class.java)
-            startActivity(intent)
-        }
+        setupNavigation()
 
         if (savedInstanceState == null) {
             homeFragment()
         }
-
-
-
     }
 
-    private fun homeFragment(){
+    private fun setupNavigation() {
+        binding.bottomNav.apply {
+            lnrHome.setOnClickListener { homeFragment() }
+            imgHome.setOnClickListener { homeFragment() }
+            lnrHistory.setOnClickListener { historyFragment() }
+            imgHistory.setOnClickListener { historyFragment() }
+            view2.setOnClickListener { startActivity(Intent(this@MainActivity, AddNewTaskActivity::class.java)) }
+            imgAdd.setOnClickListener { startActivity(Intent(this@MainActivity, AddNewTaskActivity::class.java)) }
+        }
+    }
+
+    private fun homeFragment() {
         loadFragment(HomeFragment())
-        val selectedColor = Color.parseColor("#7EBB4F")
-        val selectedtxtcolor = Color.parseColor("#FF000000")
-        val unselectedColor = Color.parseColor("#8D2D2D30")
-        binding.bottomNav.imgHome.setColorFilter(selectedColor)
-        binding.bottomNav.tvHome.setTextColor(selectedtxtcolor)
-        binding.bottomNav.imgHistory.setColorFilter(unselectedColor)
-        binding.bottomNav.tvHistory.setTextColor(unselectedColor)
+        updateNavigationUI(selectedHome = true)
     }
 
-    private fun historyFragment(){
+    private fun historyFragment() {
         loadFragment(Historyragment())
+        updateNavigationUI(selectedHome = false)
+    }
+
+    private fun updateNavigationUI(selectedHome: Boolean) {
         val selectedColor = Color.parseColor("#7EBB4F")
-        val selectedtxtcolor = Color.parseColor("#FF000000")
+        val selectedTxtColor = Color.parseColor("#FF000000")
         val unselectedColor = Color.parseColor("#8D2D2D30")
-        binding.bottomNav.imgHome.setColorFilter(unselectedColor)
-        binding.bottomNav.tvHome.setTextColor(unselectedColor)
-        binding.bottomNav.imgHistory.setColorFilter(selectedColor)
-        binding.bottomNav.tvHistory.setTextColor(selectedtxtcolor)
+
+        binding.bottomNav.apply {
+            imgHome.setColorFilter(if (selectedHome) selectedColor else unselectedColor)
+            tvHome.setTextColor(if (selectedHome) selectedTxtColor else unselectedColor)
+            imgHistory.setColorFilter(if (selectedHome) unselectedColor else selectedColor)
+            tvHistory.setTextColor(if (selectedHome) unselectedColor else selectedTxtColor)
+        }
     }
 
     private fun loadFragment(fragment: Fragment) {
@@ -87,6 +75,4 @@ class MainActivity : AppCompatActivity() {
             .replace(R.id.fragmentContainer, fragment)
             .commit()
     }
-
-
 }

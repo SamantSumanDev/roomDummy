@@ -38,7 +38,7 @@ class Historyragment : Fragment() {
         noteDeletedRVAdapter = NoteDeletedRVAdapter(requireContext())
         notesRV.adapter = noteDeletedRVAdapter
 
-        viewModel.allDeletedNotes.observe(viewLifecycleOwner, Observer { list ->
+       /* viewModel.allDeletedNotes.observe(viewLifecycleOwner, Observer { list ->
             list?.let {
                 if (it.isEmpty()) {
                     binding.recyclerView.visibility = View.GONE
@@ -49,7 +49,7 @@ class Historyragment : Fragment() {
                     noteDeletedRVAdapter.updateList(it)
                 }
             }
-        })
+        })*/
         return binding.root
     }
 

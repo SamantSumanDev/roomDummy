@@ -9,102 +9,87 @@ import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.gamdestroyerr.roomnote.model.Note
 import com.samant.rommdummy.adapters.NoteRVAdapter
 import com.samant.rommdummy.databinding.FragmentHomeBinding
 import com.samant.rommdummy.ui.activity.TaskViewActivity
 import com.samant.rommdummy.viewmodel.NoteViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class HomeFragment : Fragment(), NoteRVAdapter.NoteClickInterface, NoteRVAdapter.NoteClickShareInterface {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+
+    @Inject
+    lateinit var noteRVAdapter: NoteRVAdapter
+
     private val viewModel: NoteViewModel by viewModels()
-    private lateinit var notesRV: RecyclerView
-    private lateinit var noteRVAdapter: NoteRVAdapter
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
-
-    private fun initView() {
-        notesRV = binding.recyclerView
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
 
-        initView()
-        notesRV.layoutManager = LinearLayoutManager(requireContext())
-
-        // Initialize the adapter
-        noteRVAdapter = NoteRVAdapter(requireContext(), this,this)
-
-        // Set adapter to RecyclerView
-        notesRV.adapter = noteRVAdapter
-
-        // Observe changes on the list
-        viewModel.allNotes.observe(viewLifecycleOwner, Observer { list ->
-            list?.let {
-                if (it.isEmpty()) {
-                    binding.recyclerView.visibility = View.GONE
-                    binding.lnrNoTask.visibility = View.VISIBLE
-                } else {
-                    binding.recyclerView.visibility = View.VISIBLE
-                    binding.lnrNoTask.visibility = View.GONE
-                    noteRVAdapter.updateList(it)
-                }
-            }
-        })
+        initRecyclerView()
+        observeNotes()
 
         return binding.root
+    }
+
+    private fun initRecyclerView() {
+        binding.recyclerView.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = noteRVAdapter
+        }
+    }
+
+    private fun observeNotes() {
+        viewModel.allNotes.observe(viewLifecycleOwner, Observer { list ->
+            if (list.isNullOrEmpty()) {
+                binding.recyclerView.visibility = View.GONE
+                binding.lnrNoTask.visibility = View.VISIBLE
+            } else {
+                binding.recyclerView.visibility = View.VISIBLE
+                binding.lnrNoTask.visibility = View.GONE
+                noteRVAdapter.updateList(list)
+            }
+        })
+    }
+
+    override fun onNoteClick(note: Note) {
+        val intent = Intent(activity, TaskViewActivity::class.java).apply {
+            putExtra("note", note)
+        }
+        startActivity(intent)
+    }
+
+    override fun onShareIconClick(note: Note) {
+        val shareText = getNoteShareText(note)
+        val sendIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, shareText)
+            type = "text/plain"
+        }
+        val shareIntent = Intent.createChooser(sendIntent, null)
+        startActivity(shareIntent)
+    }
+
+    private fun getNoteShareText(note: Note): String {
+        return """
+            Note: ${note.noteTitle}
+            Description: ${note.noteDescription}
+            Venue: ${note.noteMapLink}
+            Map Link: ${note.noteMapLink}
+            Date-Time: ${note.timeStamp}
+        """.trimIndent()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    companion object {
-        const val TAG = "HomeFragment"
-    }
-
-
-    private fun shareNote(note: Note) {
-        val sendIntent: Intent = Intent().apply {
-            action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, getNoteShareText(note))
-            type = "text/plain"
-        }
-
-        val shareIntent = Intent.createChooser(sendIntent, null)
-        startActivity(shareIntent)
-    }
-
-    private fun getNoteShareText(note:Note): String {
-        return "Note: ${note.noteTitle}\n" +
-                "Description: ${note.noteDescription}\n" +
-                "Venue: ${note.noteMapLink}\n" +
-                "Map Link: ${note.noteMapLink}\n" +
-                "Date-Time: ${note.timeStamp}"
-    }
-
-
-    fun openTaskView(note: Note){
-        val intent = Intent(activity, TaskViewActivity::class.java)
-        intent.putExtra("note", note)
-        startActivity(intent)
-    }
-
-    override fun onNoteClick(note: Note) {
-        openTaskView(note)
-    }
-
-    override fun onShareIconClick(note: Note) {
-        shareNote(note)
     }
 }

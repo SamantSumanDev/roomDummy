@@ -1,183 +1,141 @@
 package com.samant.rommdummy.ui.activity
 
-import android.os.Bundle
-import android.view.View
-import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.AppCompatEditText
-import androidx.appcompat.widget.AppCompatImageView
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.util.Log
-import android.view.LayoutInflater
-import android.view.ViewGroup
-import android.widget.Button
+import android.os.Bundle
 import android.widget.Toast
-import androidx.fragment.app.Fragment
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.gamdestroyerr.roomnote.model.Note
 import com.samant.rommdummy.R
 import com.samant.rommdummy.databinding.ActivityAddNewTaskBinding
 import com.samant.rommdummy.viewmodel.NoteViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class AddNewTaskActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivityAddNewTaskBinding
-    private lateinit var edtEventName: AppCompatEditText
-    private lateinit var edtDescription: AppCompatEditText
-    private lateinit var edtAddress: AppCompatEditText
-    private lateinit var edtMapLink: AppCompatEditText
-    private lateinit var viewEdit: View
-    private lateinit var imgEdit: AppCompatImageView
-    private var id: Int = 0
     private val viewModel: NoteViewModel by viewModels()
+
+    private var id: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddNewTaskBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        supportActionBar?.hide()
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-
-        initView()
-        clickListner()
-
+        setupWindowInsets()
+        initUI()
+        handleIntent()
+        setupClickListeners()
     }
 
-    private fun clickListner() {
-        binding.include2.appCompatImageView2.setImageResource(R.drawable.back)
-        binding.include2.appCompatImageView2.setOnClickListener {
-            finish()
+    private fun setupWindowInsets() {
+        supportActionBar?.hide()
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
         }
-        val currentDateTime = getCurrentDateTime()
-        binding.tvDateTIme.text = currentDateTime
+    }
+
+    private fun initUI() {
+        binding.include2.appCompatImageView2.apply {
+            setImageResource(R.drawable.back)
+            setOnClickListener { finish() }
+        }
         binding.include2.tvAction.text = "Add New Task"
-        binding.viewEdit.setOnClickListener {
-            showDateTimePicker()
-        }
+        binding.tvDateTIme.text = getCurrentDateTime()
+    }
 
-        binding.imgEdit.setOnClickListener {
-            showDateTimePicker()
-        }
-
+    private fun handleIntent() {
         val noteType = intent.getStringExtra("noteType")
-        if (noteType.equals("edit")) {
+        if (noteType == "edit") {
             val note = intent.getParcelableExtra<Note>("note")!!
             id = note.id
-            edtEventName.setText(note.noteTitle)
-            edtDescription.setText(note.noteDescription)
-            edtAddress.setText(note.noteVenue)
-            edtMapLink.setText(note.noteMapLink)
-            binding.tvDateTIme.setText(note.timeStamp)
-
+            populateFields(note)
             binding.btnSave.text = "Update Task"
         } else {
             binding.btnSave.text = "Save Task"
         }
+    }
 
-        binding.btnSave.setOnClickListener {
+    private fun populateFields(note: Note) {
+        binding.apply {
+            edtEventName.setText(note.noteTitle)
+            edtEventDescription.setText(note.noteDescription)
+            edtAddress.setText(note.noteVenue)
+            edtMapLink.setText(note.noteMapLink)
+            tvDateTIme.text = note.timeStamp
+        }
+    }
 
-            val name = edtEventName.text.toString()
-            val description = edtDescription.text.toString()
-            val address = edtAddress.text.toString()
-            val mapLink = edtMapLink.text.toString()
-            val dateTime = binding.tvDateTIme.text.toString()
+    private fun setupClickListeners() {
+        binding.viewEdit.setOnClickListener { showDateTimePicker() }
+        binding.imgEdit.setOnClickListener { showDateTimePicker() }
 
-            if (noteType.equals("edit")) {
-                if (name.isNotEmpty() && description.isNotEmpty()) {
+        binding.btnSave.setOnClickListener { handleSaveOrUpdate() }
+    }
 
+    private fun handleSaveOrUpdate() {
+        val name = binding.edtEventName.text.toString()
+        val description = binding.edtEventDescription.text.toString()
+        val address = binding.edtAddress.text.toString()
+        val mapLink = binding.edtMapLink.text.toString()
+        val dateTime = binding.tvDateTIme.text.toString()
 
-                   viewModel.updateNote(
-                        id = id,
-                        noteTitle = name,
-                        noteDescription = description,
-                        noteVenue = address,
-                        noteMapLink = mapLink,
-                        timeStamp = dateTime
-                    )
-                    Toast.makeText(this, "Task Updated on ID: $id", Toast.LENGTH_SHORT).show()
-                    finish()
-                } else {
-                    Toast.makeText(this, "Please Fill Empty Fields", Toast.LENGTH_SHORT).show()
-                }
-
-            } else {
-                if (name.isNotEmpty() && description.isNotEmpty()) {
-                    viewModel.addNote(Note(noteTitle =  name, noteDescription =  description, noteVenue = address, noteMapLink =  mapLink, timeStamp =  dateTime))
-                    Toast.makeText(this, "Task Added", Toast.LENGTH_SHORT).show()
-                    finish()
-                } else {
-                    Toast.makeText(this, "Please Fill Empty Fields", Toast.LENGTH_SHORT).show()
-                }
-
-            }
-
-
+        if (name.isEmpty() || description.isEmpty()) {
+            Toast.makeText(this, "Please Fill Empty Fields", Toast.LENGTH_SHORT).show()
+            return
         }
 
+        val note = Note(id, name, description, address, mapLink, dateTime)
 
+        if (binding.btnSave.text == "Update Task") {
+            viewModel.updateNote(note)
+            Toast.makeText(this, "Task Updated on ID: $id", Toast.LENGTH_SHORT).show()
+        } else {
+            viewModel.addNote(note)
+            Toast.makeText(this, "Task Added", Toast.LENGTH_SHORT).show()
+        }
+        finish()
     }
-
-
-
-    private fun initView() {
-        edtEventName = binding.edtEventName
-        edtDescription = binding.edtEventDescription
-        edtAddress = binding.edtAddress
-        edtMapLink = binding.edtMapLink
-        viewEdit = binding.viewEdit
-        imgEdit = binding.imgEdit
-    }
-
 
     private fun showDateTimePicker() {
         val calendar = Calendar.getInstance()
-        val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH)
-        val dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH)
-
-        val datePickerDialog = DatePickerDialog(
+        DatePickerDialog(
             this,
-            DatePickerDialog.OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
-                val selectedDate = Calendar.getInstance()
-                selectedDate.set(year, monthOfYear, dayOfMonth)
+            { _, year, monthOfYear, dayOfMonth ->
+                calendar.set(Calendar.YEAR, year)
+                calendar.set(Calendar.MONTH, monthOfYear)
+                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
 
-                val hour = selectedDate.get(Calendar.HOUR_OF_DAY)
-                val minute = selectedDate.get(Calendar.MINUTE)
-
-                val timePickerDialog = TimePickerDialog(
+                TimePickerDialog(
                     this,
-                    TimePickerDialog.OnTimeSetListener { _, hourOfDay, minute ->
-                        selectedDate.set(Calendar.HOUR_OF_DAY, hourOfDay)
-                        selectedDate.set(Calendar.MINUTE, minute)
+                    { _, hourOfDay, minute ->
+                        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                        calendar.set(Calendar.MINUTE, minute)
 
-                        val dateFormat =
-                            SimpleDateFormat("MMM dd, yyyy - h:mm a", Locale.getDefault())
-                        val dateTime = dateFormat.format(selectedDate.time)
-                        binding.tvDateTIme.text = dateTime
-                        //   Toast.makeText(this, "Selected Date and Time: $dateTime", Toast.LENGTH_LONG).show()
+                        val dateFormat = SimpleDateFormat("MMM dd, yyyy - h:mm a", Locale.getDefault())
+                        binding.tvDateTIme.text = dateFormat.format(calendar.time)
                     },
-                    hour,
-                    minute,
+                    calendar.get(Calendar.HOUR_OF_DAY),
+                    calendar.get(Calendar.MINUTE),
                     false
-                )
-
-                timePickerDialog.show()
+                ).show()
             },
-            year,
-            month,
-            dayOfMonth
-        )
-
-        datePickerDialog.datePicker.minDate = System.currentTimeMillis() - 1000
-        datePickerDialog.show()
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).apply {
+            datePicker.minDate = System.currentTimeMillis() - 1000
+        }.show()
     }
 
     private fun getCurrentDateTime(): String {

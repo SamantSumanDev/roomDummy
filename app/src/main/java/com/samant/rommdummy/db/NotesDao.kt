@@ -14,26 +14,21 @@ interface NotesDao {
     @Query("DELETE FROM notesTable WHERE id = :id")
     suspend fun delete(id: Int)
 
-    @Query("SELECT * FROM notesTable ORDER BY id ASC")
+    @Query("SELECT * FROM notesTable ORDER BY timeStamp DESC")
     fun getAllNotes(): LiveData<List<Note>>
 
-    @Insert
+  /*  @Insert
     suspend fun insertDeleted(deletedNote: DeletedNote)
-
-    @Query("SELECT * FROM deleted_notes ORDER BY id DESC")
+*/
+  /*  @Query("SELECT * FROM deleted_notes ORDER BY id DESC")
     fun getAllDeletedNotes(): LiveData<List<DeletedNote>>
-
+*/
     @Delete
-    suspend fun deleteDeleted(deletedNote: DeletedNote)
+    suspend fun deleteNote(note: Note)
 
 
-    @Query("UPDATE notesTable SET title = :noteTitle, description = :noteDescription, venue = :noteVenue, mapLink = :noteMapLink, timestamp = :timeStamp WHERE id = :id")
+   @Update
     suspend fun updateNoteById(
-        id: Int,
-        noteTitle: String,
-        noteDescription: String,
-        noteVenue: String,
-        noteMapLink: String,
-        timeStamp: String
+        note:Note
     )
 }
